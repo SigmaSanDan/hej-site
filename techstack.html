@@ -1,0 +1,1128 @@
+<!DOCTYPE html>
+<html lang="sv">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tech Stack Visualizer</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+  *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+  :root {
+    --navy: #14204C;
+    --navy-light: #1c2d66;
+    --navy-surface: rgba(255,255,255,0.04);
+    --navy-border: rgba(255,255,255,0.08);
+    --pink: #EB5C8C;
+    --pink-light: #f07da5;
+    --cream: #F5F2E8;
+    --cream-dark: #e8e4d8;
+    --yellow: #F4EA39;
+    --yellow-light: #FFF53C;
+    --white: #FFFFFF;
+    --text-muted-light: rgba(245, 242, 232, 0.7);
+  }
+
+  body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--navy);
+    color: var(--white);
+    min-height: 100vh;
+    line-height: 1.6;
+  }
+
+  .app {
+    display: grid;
+    grid-template-columns: 380px 1fr;
+    min-height: 100vh;
+  }
+
+  /* Sidebar */
+  .sidebar {
+    background: var(--navy);
+    border-right: 1px solid var(--navy-border);
+    padding: 28px;
+    overflow-y: auto;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .sidebar h1 {
+    font-size: 22px;
+    font-weight: 800;
+    color: var(--white);
+    letter-spacing: -0.02em;
+  }
+
+  .sidebar p.subtitle {
+    font-size: 13px;
+    color: var(--text-muted-light);
+    margin-top: -12px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--pink);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+  }
+
+  input, select {
+    background: var(--navy-surface);
+    border: 1px solid var(--navy-border);
+    border-radius: 12px;
+    padding: 11px 14px;
+    color: var(--white);
+    font-size: 14px;
+    font-family: 'Inter', sans-serif;
+    outline: none;
+    transition: all 0.3s;
+  }
+
+  input:focus, select:focus {
+    border-color: rgba(235, 92, 140, 0.4);
+    background: rgba(255,255,255,0.07);
+  }
+
+  input::placeholder { color: var(--text-muted-light); }
+
+  select {
+    cursor: pointer;
+    color: var(--white);
+  }
+
+  select option {
+    background: var(--navy);
+    color: var(--white);
+  }
+
+  .btn {
+    padding: 11px 18px;
+    border-radius: 100px;
+    border: none;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+  }
+
+  .btn-primary {
+    background: linear-gradient(135deg, var(--pink), #a855f7);
+    color: var(--white);
+    box-shadow: 0 4px 16px rgba(235, 92, 140, 0.3);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 24px rgba(235, 92, 140, 0.4);
+  }
+
+  .btn-secondary {
+    background: var(--navy-surface);
+    color: var(--text-muted-light);
+    border: 1px solid var(--navy-border);
+    border-radius: 100px;
+  }
+
+  .btn-secondary:hover {
+    background: rgba(255,255,255,0.07);
+    color: var(--white);
+  }
+
+  .btn-danger {
+    background: transparent;
+    color: var(--pink);
+    border: 1px solid var(--navy-border);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+
+  .btn-danger:hover { background: rgba(235, 92, 140, 0.1); border-color: var(--pink); }
+
+  .btn-connect {
+    background: transparent;
+    color: var(--yellow);
+    border: 1px solid var(--navy-border);
+    font-size: 12px;
+    padding: 6px 10px;
+    border-radius: 8px;
+  }
+
+  .btn-connect:hover { background: rgba(244, 234, 57, 0.08); border-color: var(--yellow); }
+
+  .system-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    flex: 1;
+    overflow-y: auto;
+  }
+
+  .system-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 14px;
+    background: var(--navy-surface);
+    border: 1px solid var(--navy-border);
+    border-radius: 16px;
+    transition: all 0.3s;
+  }
+
+  .system-item:hover {
+    background: rgba(255,255,255,0.07);
+    border-color: rgba(235, 92, 140, 0.2);
+  }
+
+  .system-item .dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  .system-item .info {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .system-item .name {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .system-item .category {
+    font-size: 11px;
+    color: var(--text-muted-light);
+  }
+
+  .system-item .actions {
+    display: flex;
+    gap: 4px;
+    flex-shrink: 0;
+  }
+
+  .divider {
+    height: 1px;
+    background: var(--navy-border);
+  }
+
+  /* Connection mode banner */
+  .connect-banner {
+    display: none;
+    padding: 14px;
+    background: rgba(235, 92, 140, 0.08);
+    border: 1px solid rgba(235, 92, 140, 0.2);
+    border-radius: 16px;
+    font-size: 13px;
+    color: var(--pink-light);
+    text-align: center;
+  }
+
+  .connect-banner.active { display: block; }
+
+  .connect-banner .cancel-link {
+    color: var(--text-muted-light);
+    cursor: pointer;
+    text-decoration: underline;
+    margin-top: 4px;
+    display: inline-block;
+  }
+
+  /* Direction buttons */
+  .connect-direction {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .btn-dir {
+    flex: 1;
+    padding: 9px 14px;
+    border-radius: 100px;
+    border: 1px solid var(--navy-border);
+    background: var(--navy-surface);
+    color: var(--text-muted-light);
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+  }
+
+  .btn-dir:hover { border-color: rgba(235, 92, 140, 0.3); color: var(--white); }
+
+  .btn-dir.active {
+    background: rgba(235, 92, 140, 0.15);
+    border-color: var(--pink);
+    color: var(--pink-light);
+  }
+
+  /* Canvas area */
+  .canvas-area {
+    position: relative;
+    overflow: hidden;
+    background: linear-gradient(160deg, var(--navy) 0%, #1a1540 40%, #251a4a 70%, var(--navy) 100%);
+  }
+
+  .canvas-area svg {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  .canvas-area svg line {
+    stroke-width: 2;
+    opacity: 0.6;
+  }
+
+  .canvas-area svg text {
+    font-family: 'Inter', sans-serif;
+    font-size: 11px;
+    fill: var(--text-muted-light);
+  }
+
+  /* Nodes on canvas */
+  .node {
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: grab;
+    user-select: none;
+    transition: transform 0.1s;
+  }
+
+  .node:active { cursor: grabbing; }
+
+  .node .icon-box {
+    width: 68px;
+    height: 68px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--white);
+    border: 2px solid transparent;
+    transition: all 0.4s ease;
+    position: relative;
+    backdrop-filter: blur(10px);
+  }
+
+  .node:hover .icon-box {
+    border-color: rgba(235, 92, 140, 0.3);
+    box-shadow: 0 0 32px rgba(235, 92, 140, 0.15);
+    transform: translateY(-4px);
+  }
+
+  .node .node-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--cream);
+    text-align: center;
+    max-width: 120px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .node .node-cat {
+    font-size: 10px;
+    color: var(--text-muted-light);
+    margin-top: -6px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    font-weight: 600;
+  }
+
+  /* Category legend */
+  .legend {
+    position: absolute;
+    bottom: 20px;
+    left: 20px;
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: var(--text-muted-light);
+    font-weight: 500;
+  }
+
+  .legend-item .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+  }
+
+  /* Empty state */
+  .empty-state {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: var(--text-muted-light);
+  }
+
+  .empty-state .arrow {
+    font-size: 48px;
+    margin-bottom: 16px;
+    color: var(--pink);
+    opacity: 0.5;
+  }
+
+  .empty-state p {
+    font-size: 16px;
+    font-weight: 400;
+  }
+
+  /* Export buttons */
+  .export-bar {
+    position: absolute;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .btn-export {
+    padding: 8px 16px;
+    border-radius: 100px;
+    border: 1px solid var(--navy-border);
+    background: rgba(255,255,255,0.04);
+    color: var(--text-muted-light);
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s;
+    backdrop-filter: blur(10px);
+  }
+
+  .btn-export:hover {
+    background: rgba(255,255,255,0.1);
+    color: var(--white);
+    border-color: rgba(235, 92, 140, 0.3);
+  }
+
+  /* Title overlay */
+  .canvas-title {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--yellow);
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+
+<div class="app">
+  <div class="sidebar">
+    <h1>Tech Stack</h1>
+    <p class="subtitle">Lägg till system och koppla ihop dem</p>
+
+    <div class="form-group">
+      <label>Systemnamn</label>
+      <input type="text" id="systemName" placeholder="t.ex. Salesforce, PostgreSQL..." autofocus>
+    </div>
+
+    <div class="form-group">
+      <label>Kategori</label>
+      <select id="systemCategory">
+        <option value="frontend">Frontend</option>
+        <option value="backend">Backend</option>
+        <option value="database">Databas</option>
+        <option value="auth">Autentisering</option>
+        <option value="cicd">CI/CD & Deploy</option>
+        <option value="monitoring">Övervakning & Logging</option>
+        <option value="communication">Kommunikation</option>
+        <option value="crm">CRM & Affärssystem</option>
+        <option value="cloud">Moln & Infra</option>
+        <option value="ai">AI & ML</option>
+        <option value="webshop">Webshop & E-handel</option>
+        <option value="finance">Ekonomisystem</option>
+        <option value="other">Övrigt</option>
+      </select>
+    </div>
+
+    <div class="form-group">
+      <label>Webbplats (valfritt, för logotyp)</label>
+      <input type="text" id="systemDomain" placeholder="t.ex. fortnox.se, github.com">
+    </div>
+
+    <button class="btn btn-primary" onclick="addSystem()">+ Lägg till system</button>
+
+    <div class="divider"></div>
+
+    <div class="connect-banner" id="connectBanner">
+      Klicka på ett system i listan för att koppla<br>
+      <span class="cancel-link" onclick="cancelConnect()">Avbryt</span>
+    </div>
+
+    <div class="connect-direction" id="connectDirection" style="display:none;">
+      <label>Riktning</label>
+      <div style="display:flex; gap:6px;">
+        <button class="btn-dir active" data-dir="oneway" onclick="setConnectDir('oneway')">→ Enväg</button>
+        <button class="btn-dir" data-dir="twoway" onclick="setConnectDir('twoway')">↔ Tvåvägs</button>
+      </div>
+    </div>
+
+    <label>Tillagda system</label>
+    <div class="system-list" id="systemList">
+    </div>
+
+    <div class="divider"></div>
+
+    <button class="btn btn-secondary" onclick="clearAll()">Rensa allt</button>
+  </div>
+
+  <div class="canvas-area" id="canvas">
+    <svg id="connSvg"></svg>
+    <div class="canvas-title">SYSTEMÖVERSIKT</div>
+    <div class="empty-state" id="emptyState">
+      <div class="arrow">←</div>
+      <p>Lägg till system i panelen till vänster</p>
+    </div>
+    <div class="export-bar">
+      <button class="btn-export" onclick="exportPNG()">📷 Exportera PNG</button>
+      <button class="btn-export" onclick="autoLayout()">✨ Auto-layout</button>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = {
+  frontend:      { label: 'Frontend',             color: '#3b82f6', icon: '🖥' },
+  backend:       { label: 'Backend',              color: '#8b5cf6', icon: '⚙' },
+  database:      { label: 'Databas',              color: '#10b981', icon: '🗄' },
+  auth:          { label: 'Autentisering',        color: '#f59e0b', icon: '🔐' },
+  cicd:          { label: 'CI/CD & Deploy',       color: '#06b6d4', icon: '🚀' },
+  monitoring:    { label: 'Övervakning',          color: '#ef4444', icon: '📊' },
+  communication: { label: 'Kommunikation',       color: '#ec4899', icon: '💬' },
+  crm:           { label: 'CRM & Affärssystem',  color: '#f97316', icon: '📋' },
+  cloud:         { label: 'Moln & Infra',        color: '#64748b', icon: '☁' },
+  ai:            { label: 'AI & ML',             color: '#a78bfa', icon: '🤖' },
+  webshop:       { label: 'Webshop & E-handel', color: '#22d3ee', icon: '🛒' },
+  finance:       { label: 'Ekonomisystem',      color: '#4ade80', icon: '💰' },
+  other:         { label: 'Övrigt',              color: '#737373', icon: '📦' },
+};
+
+// Known system → domain mappings for auto-logo
+const KNOWN_DOMAINS = {
+  'fortnox': 'fortnox.se',
+  'visma': 'visma.com',
+  'google': 'google.com',
+  'github': 'github.com',
+  'gitlab': 'gitlab.com',
+  'bitbucket': 'bitbucket.org',
+  'slack': 'slack.com',
+  'teams': 'microsoft.com',
+  'microsoft teams': 'microsoft.com',
+  'jira': 'atlassian.com',
+  'confluence': 'atlassian.com',
+  'atlassian': 'atlassian.com',
+  'salesforce': 'salesforce.com',
+  'hubspot': 'hubspot.com',
+  'shopify': 'shopify.com',
+  'woocommerce': 'woocommerce.com',
+  'klarna': 'klarna.com',
+  'stripe': 'stripe.com',
+  'swish': 'swish.nu',
+  'postgresql': 'postgresql.org',
+  'postgres': 'postgresql.org',
+  'mysql': 'mysql.com',
+  'mongodb': 'mongodb.com',
+  'redis': 'redis.io',
+  'aws': 'aws.amazon.com',
+  'amazon web services': 'aws.amazon.com',
+  'azure': 'azure.microsoft.com',
+  'google cloud': 'cloud.google.com',
+  'gcp': 'cloud.google.com',
+  'vercel': 'vercel.com',
+  'netlify': 'netlify.com',
+  'docker': 'docker.com',
+  'kubernetes': 'kubernetes.io',
+  'jenkins': 'jenkins.io',
+  'terraform': 'terraform.io',
+  'datadog': 'datadoghq.com',
+  'grafana': 'grafana.com',
+  'sentry': 'sentry.io',
+  'new relic': 'newrelic.com',
+  'react': 'react.dev',
+  'angular': 'angular.io',
+  'vue': 'vuejs.org',
+  'next.js': 'nextjs.org',
+  'nextjs': 'nextjs.org',
+  'node.js': 'nodejs.org',
+  'nodejs': 'nodejs.org',
+  'python': 'python.org',
+  'wordpress': 'wordpress.org',
+  'drupal': 'drupal.org',
+  'figma': 'figma.com',
+  'notion': 'notion.so',
+  'trello': 'trello.com',
+  'asana': 'asana.com',
+  'linear': 'linear.app',
+  'supabase': 'supabase.com',
+  'firebase': 'firebase.google.com',
+  'auth0': 'auth0.com',
+  'clerk': 'clerk.com',
+  'twilio': 'twilio.com',
+  'sendgrid': 'sendgrid.com',
+  'mailchimp': 'mailchimp.com',
+  'intercom': 'intercom.com',
+  'zendesk': 'zendesk.com',
+  'freshdesk': 'freshdesk.com',
+  'powerbi': 'powerbi.microsoft.com',
+  'power bi': 'powerbi.microsoft.com',
+  'tableau': 'tableau.com',
+  'snowflake': 'snowflake.com',
+  'elastic': 'elastic.co',
+  'elasticsearch': 'elastic.co',
+  'cloudflare': 'cloudflare.com',
+  'digitalocean': 'digitalocean.com',
+  'heroku': 'heroku.com',
+  'circleci': 'circleci.com',
+  'travisci': 'travis-ci.com',
+  'travis ci': 'travis-ci.com',
+  'github actions': 'github.com',
+  'postman': 'postman.com',
+  'swagger': 'swagger.io',
+  'okta': 'okta.com',
+  'onelogin': 'onelogin.com',
+  'pagerduty': 'pagerduty.com',
+  'opsgenie': 'opsgenie.com',
+  'miro': 'miro.com',
+  'zoom': 'zoom.us',
+  'google workspace': 'google.com',
+  'microsoft 365': 'microsoft.com',
+  'office 365': 'microsoft.com',
+  'sap': 'sap.com',
+  'oracle': 'oracle.com',
+  'dynamics': 'dynamics.microsoft.com',
+  'dynamics 365': 'dynamics.microsoft.com',
+  'xero': 'xero.com',
+  'quickbooks': 'quickbooks.intuit.com',
+  'bamboo hr': 'bamboohr.com',
+  'bamboohr': 'bamboohr.com',
+  'personio': 'personio.com',
+  'magento': 'magento.com',
+  'bigcommerce': 'bigcommerce.com',
+  'squarespace': 'squarespace.com',
+  'wix': 'wix.com',
+  'segment': 'segment.com',
+  'amplitude': 'amplitude.com',
+  'mixpanel': 'mixpanel.com',
+  'hotjar': 'hotjar.com',
+  'google analytics': 'analytics.google.com',
+  'zapier': 'zapier.com',
+  'make': 'make.com',
+  'n8n': 'n8n.io',
+  'airtable': 'airtable.com',
+  'monday': 'monday.com',
+  'monday.com': 'monday.com',
+  'pipedrive': 'pipedrive.com',
+  'typeform': 'typeform.com',
+  'contentful': 'contentful.com',
+  'sanity': 'sanity.io',
+  'storyblok': 'storyblok.com',
+  'prismic': 'prismic.io',
+  'algolia': 'algolia.com',
+  'twitch': 'twitch.tv',
+  'discord': 'discord.com',
+  'telegram': 'telegram.org',
+  'whatsapp': 'whatsapp.com',
+  'facebook': 'facebook.com',
+  'meta': 'meta.com',
+  'instagram': 'instagram.com',
+  'linkedin': 'linkedin.com',
+  'twitter': 'x.com',
+  'x': 'x.com',
+  'tiktok': 'tiktok.com',
+  'spotify': 'spotify.com',
+  'apple': 'apple.com',
+};
+
+function getLogoDomain(name, manualDomain) {
+  if (manualDomain) {
+    // Clean up user input
+    return manualDomain.replace(/^https?:\/\//, '').replace(/\/.*$/, '').trim();
+  }
+  const key = name.toLowerCase().trim();
+  return KNOWN_DOMAINS[key] || null;
+}
+
+function getLogoUrl(domain) {
+  if (!domain) return null;
+  return `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+}
+
+let systems = [];
+let connections = [];
+let connectMode = null; // { fromId }
+let connectDir = 'oneway'; // 'oneway' or 'twoway'
+let dragState = null;
+
+function generateId() {
+  return 'sys_' + Math.random().toString(36).slice(2, 9);
+}
+
+function addSystem() {
+  const nameInput = document.getElementById('systemName');
+  const catSelect = document.getElementById('systemCategory');
+  const domainInput = document.getElementById('systemDomain');
+  const name = nameInput.value.trim();
+  if (!name) return;
+
+  const canvas = document.getElementById('canvas');
+  const rect = canvas.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+
+  // Place in a scattered pattern around center
+  const angle = (systems.length * 137.5) * (Math.PI / 180); // golden angle
+  const radius = 120 + systems.length * 30;
+  const x = cx + Math.cos(angle) * Math.min(radius, rect.width * 0.35) - 40;
+  const y = cy + Math.sin(angle) * Math.min(radius, rect.height * 0.35) - 40;
+
+  const domain = getLogoDomain(name, domainInput.value.trim());
+  const logoUrl = getLogoUrl(domain);
+
+  systems.push({
+    id: generateId(),
+    name,
+    category: catSelect.value,
+    domain,
+    logoUrl,
+    x: Math.max(20, Math.min(x, rect.width - 120)),
+    y: Math.max(20, Math.min(y, rect.height - 120)),
+  });
+
+  nameInput.value = '';
+  domainInput.value = '';
+  nameInput.focus();
+  render();
+}
+
+document.getElementById('systemName').addEventListener('keydown', (e) => {
+  if (e.key === 'Enter') addSystem();
+});
+
+// Auto-suggest domain when typing a known system name
+document.getElementById('systemName').addEventListener('input', (e) => {
+  const domainInput = document.getElementById('systemDomain');
+  // Only auto-fill if domain field is empty or was auto-filled before
+  if (domainInput.dataset.autoFilled === 'true' || !domainInput.value.trim()) {
+    const key = e.target.value.toLowerCase().trim();
+    const match = KNOWN_DOMAINS[key];
+    if (match) {
+      domainInput.value = match;
+      domainInput.dataset.autoFilled = 'true';
+    } else {
+      if (domainInput.dataset.autoFilled === 'true') {
+        domainInput.value = '';
+      }
+      domainInput.dataset.autoFilled = '';
+    }
+  }
+});
+
+// If user manually types in domain, stop auto-filling
+document.getElementById('systemDomain').addEventListener('input', () => {
+  document.getElementById('systemDomain').dataset.autoFilled = '';
+});
+
+function removeSystem(id) {
+  systems = systems.filter(s => s.id !== id);
+  connections = connections.filter(c => c.from !== id && c.to !== id);
+  render();
+}
+
+function setConnectDir(dir) {
+  connectDir = dir;
+  document.querySelectorAll('.btn-dir').forEach(b => {
+    b.classList.toggle('active', b.dataset.dir === dir);
+  });
+}
+
+function startConnect(id) {
+  connectMode = { fromId: id };
+  connectDir = 'oneway';
+  document.getElementById('connectBanner').classList.add('active');
+  document.getElementById('connectDirection').style.display = '';
+  // Reset direction buttons
+  document.querySelectorAll('.btn-dir').forEach(b => {
+    b.classList.toggle('active', b.dataset.dir === 'oneway');
+  });
+  const fromSys = systems.find(s => s.id === id);
+  document.getElementById('connectBanner').innerHTML =
+    `Koppla <strong>${fromSys.name}</strong> → klicka på ett annat system<br><span class="cancel-link" onclick="cancelConnect()">Avbryt</span>`;
+  render();
+}
+
+function finishConnect(toId) {
+  if (!connectMode) return;
+  if (connectMode.fromId === toId) { cancelConnect(); return; }
+
+  const exists = connections.some(c =>
+    (c.from === connectMode.fromId && c.to === toId) ||
+    (c.from === toId && c.to === connectMode.fromId)
+  );
+
+  if (!exists) {
+    connections.push({ from: connectMode.fromId, to: toId, direction: connectDir });
+  }
+
+  cancelConnect();
+  render();
+}
+
+function cancelConnect() {
+  connectMode = null;
+  document.getElementById('connectBanner').classList.remove('active');
+  document.getElementById('connectDirection').style.display = 'none';
+  render();
+}
+
+function removeConnection(from, to) {
+  connections = connections.filter(c => !(c.from === from && c.to === to));
+  render();
+}
+
+function clearAll() {
+  systems = [];
+  connections = [];
+  connectMode = null;
+  render();
+}
+
+function autoLayout() {
+  if (systems.length === 0) return;
+
+  const canvas = document.getElementById('canvas');
+  const rect = canvas.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+
+  // Group by category
+  const groups = {};
+  systems.forEach(s => {
+    if (!groups[s.category]) groups[s.category] = [];
+    groups[s.category].push(s);
+  });
+
+  const catKeys = Object.keys(groups);
+  const angleStep = (2 * Math.PI) / catKeys.length;
+
+  catKeys.forEach((cat, gi) => {
+    const items = groups[cat];
+    const groupAngle = angleStep * gi - Math.PI / 2;
+    const groupRadius = Math.min(rect.width, rect.height) * 0.28;
+    const gcx = cx + Math.cos(groupAngle) * groupRadius;
+    const gcy = cy + Math.sin(groupAngle) * groupRadius;
+
+    items.forEach((sys, i) => {
+      const itemAngle = (i / items.length) * 2 * Math.PI;
+      const itemRadius = items.length > 1 ? 60 + items.length * 10 : 0;
+      sys.x = Math.max(20, Math.min(gcx + Math.cos(itemAngle) * itemRadius - 40, rect.width - 120));
+      sys.y = Math.max(20, Math.min(gcy + Math.sin(itemAngle) * itemRadius - 40, rect.height - 120));
+    });
+  });
+
+  render();
+}
+
+function render() {
+  renderSidebar();
+  renderCanvas();
+  renderConnections();
+  renderLegend();
+}
+
+function renderSidebar() {
+  const list = document.getElementById('systemList');
+
+  if (systems.length === 0) {
+    list.innerHTML = '<p style="color:#444; font-size:13px; text-align:center; padding:20px;">Inga system tillagda ännu</p>';
+    return;
+  }
+
+  list.innerHTML = systems.map(s => {
+    const cat = CATEGORIES[s.category];
+    const isConnectSource = connectMode && connectMode.fromId === s.id;
+    return `
+      <div class="system-item" style="${isConnectSource ? 'border-color: #3b82f6;' : ''}"
+           ${connectMode && !isConnectSource ? `onclick="finishConnect('${s.id}')" style="cursor:pointer;"` : ''}>
+        ${s.logoUrl
+          ? `<img src="${s.logoUrl}" alt="" style="width:20px;height:20px;border-radius:4px;flex-shrink:0;" onerror="this.style.display='none';this.nextElementSibling.style.display='block'"><div class="dot" style="background:${cat.color};display:none"></div>`
+          : `<div class="dot" style="background: ${cat.color}"></div>`
+        }
+        <div class="info">
+          <div class="name">${s.name}</div>
+          <div class="category">${cat.label}</div>
+        </div>
+        <div class="actions">
+          ${!connectMode ? `
+            <button class="btn-connect" onclick="event.stopPropagation(); startConnect('${s.id}')">↔</button>
+            <button class="btn-danger" onclick="event.stopPropagation(); removeSystem('${s.id}')">✕</button>
+          ` : ''}
+        </div>
+      </div>
+    `;
+  }).join('');
+}
+
+function renderCanvas() {
+  const canvas = document.getElementById('canvas');
+  const empty = document.getElementById('emptyState');
+  empty.style.display = systems.length === 0 ? 'block' : 'none';
+
+  // Remove old nodes
+  canvas.querySelectorAll('.node').forEach(n => n.remove());
+
+  systems.forEach(sys => {
+    const cat = CATEGORIES[sys.category];
+    const node = document.createElement('div');
+    node.className = 'node';
+    node.style.left = sys.x + 'px';
+    node.style.top = sys.y + 'px';
+    node.setAttribute('data-id', sys.id);
+
+    node.innerHTML = `
+      <div class="icon-box" style="background: ${cat.color}22; border-color: ${cat.color}44;">
+        ${sys.logoUrl
+          ? `<img src="${sys.logoUrl}" alt="" style="width:36px;height:36px;border-radius:6px;" onerror="this.style.display='none';this.nextElementSibling.style.display='inline'"><span style="display:none">${cat.icon}</span>`
+          : `<span>${cat.icon}</span>`
+        }
+      </div>
+      <div class="node-label">${sys.name}</div>
+      <div class="node-cat">${cat.label}</div>
+    `;
+
+    // Drag
+    node.addEventListener('mousedown', (e) => {
+      if (connectMode) return;
+      e.preventDefault();
+      dragState = {
+        id: sys.id,
+        startX: e.clientX - sys.x,
+        startY: e.clientY - sys.y,
+      };
+    });
+
+    canvas.appendChild(node);
+  });
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (!dragState) return;
+  const sys = systems.find(s => s.id === dragState.id);
+  if (!sys) return;
+
+  sys.x = e.clientX - dragState.startX;
+  sys.y = e.clientY - dragState.startY;
+
+  const node = document.querySelector(`.node[data-id="${sys.id}"]`);
+  if (node) {
+    node.style.left = sys.x + 'px';
+    node.style.top = sys.y + 'px';
+  }
+  renderConnections();
+});
+
+document.addEventListener('mouseup', () => {
+  dragState = null;
+});
+
+function drawArrow(svg, x1, y1, x2, y2, color, opacity) {
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const len = Math.sqrt(dx * dx + dy * dy);
+  if (len < 1) return;
+  const ux = dx / len;
+  const uy = dy / len;
+
+  // Arrow head size
+  const headLen = 14;
+  const headWidth = 7;
+
+  // Line stops before the arrowhead
+  const lineEndX = x2 - ux * headLen;
+  const lineEndY = y2 - uy * headLen;
+
+  // Draw the line
+  const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+  line.setAttribute('x1', x1);
+  line.setAttribute('y1', y1);
+  line.setAttribute('x2', lineEndX);
+  line.setAttribute('y2', lineEndY);
+  line.setAttribute('stroke', color);
+  line.setAttribute('stroke-width', '2.5');
+  line.setAttribute('opacity', opacity);
+  svg.appendChild(line);
+
+  // Draw arrowhead as a filled triangle
+  const tipX = x2;
+  const tipY = y2;
+  const leftX = x2 - ux * headLen + uy * headWidth;
+  const leftY = y2 - uy * headLen - ux * headWidth;
+  const rightX = x2 - ux * headLen - uy * headWidth;
+  const rightY = y2 - uy * headLen + ux * headWidth;
+
+  const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+  arrow.setAttribute('points', `${tipX},${tipY} ${leftX},${leftY} ${rightX},${rightY}`);
+  arrow.setAttribute('fill', color);
+  arrow.setAttribute('opacity', opacity);
+  svg.appendChild(arrow);
+}
+
+function renderConnections() {
+  const svg = document.getElementById('connSvg');
+  svg.innerHTML = '';
+
+  connections.forEach(conn => {
+    const from = systems.find(s => s.id === conn.from);
+    const to = systems.find(s => s.id === conn.to);
+    if (!from || !to) return;
+
+    const cx1 = from.x + 40;
+    const cy1 = from.y + 36;
+    const cx2 = to.x + 40;
+    const cy2 = to.y + 36;
+
+    const dx = cx2 - cx1;
+    const dy = cy2 - cy1;
+    const len = Math.sqrt(dx * dx + dy * dy);
+    if (len < 1) return;
+    const ux = dx / len;
+    const uy = dy / len;
+
+    const nodeRadius = 42;
+    const fromCat = CATEGORIES[from.category];
+    const toCat = CATEGORIES[to.category];
+    const isTwoway = conn.direction === 'twoway';
+
+    if (isTwoway) {
+      // Two parallel lines with offset, each with its own arrow
+      const gap = 6;
+      // Perpendicular offset
+      const px = -uy * gap;
+      const py = ux * gap;
+
+      // Line A: from → to (offset one side)
+      const a1x = cx1 + ux * nodeRadius + px;
+      const a1y = cy1 + uy * nodeRadius + py;
+      const a2x = cx2 - ux * nodeRadius + px;
+      const a2y = cy2 - uy * nodeRadius + py;
+      drawArrow(svg, a1x, a1y, a2x, a2y, fromCat.color, 0.75);
+
+      // Line B: to → from (offset other side)
+      const b1x = cx2 - ux * nodeRadius - px;
+      const b1y = cy2 - uy * nodeRadius - py;
+      const b2x = cx1 + ux * nodeRadius - px;
+      const b2y = cy1 + uy * nodeRadius - py;
+      drawArrow(svg, b1x, b1y, b2x, b2y, toCat.color, 0.75);
+
+    } else {
+      // Single arrow: from → to
+      const sx = cx1 + ux * nodeRadius;
+      const sy = cy1 + uy * nodeRadius;
+      const ex = cx2 - ux * nodeRadius;
+      const ey = cy2 - uy * nodeRadius;
+
+      // Gradient for single line
+      const gradId = `grad_${conn.from}_${conn.to}`;
+      const defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+      defs.innerHTML = `
+        <linearGradient id="${gradId}" x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" gradientUnits="userSpaceOnUse">
+          <stop offset="0%" stop-color="${fromCat.color}" />
+          <stop offset="100%" stop-color="${toCat.color}" />
+        </linearGradient>
+      `;
+      svg.appendChild(defs);
+      drawArrow(svg, sx, sy, ex, ey, `url(#${gradId})`, 0.75);
+      // Re-draw arrowhead with solid color since gradient doesn't work on polygon fill
+      // Remove last polygon and redraw with toCat color
+      const lastPoly = svg.querySelector('polygon:last-of-type');
+      if (lastPoly) lastPoly.setAttribute('fill', toCat.color);
+    }
+  });
+}
+
+function renderLegend() {
+  const legend = document.getElementById('legend');
+  const usedCats = [...new Set(systems.map(s => s.category))];
+
+  legend.innerHTML = usedCats.map(cat => {
+    const c = CATEGORIES[cat];
+    return `<div class="legend-item"><div class="dot" style="background:${c.color}"></div>${c.label}</div>`;
+  }).join('');
+}
+
+async function exportPNG() {
+  const canvas = document.getElementById('canvas');
+
+  // Use html2canvas if available, otherwise fallback
+  if (typeof html2canvas === 'undefined') {
+    // Load html2canvas dynamically
+    const script = document.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js';
+    script.onload = () => doExport();
+    document.head.appendChild(script);
+  } else {
+    doExport();
+  }
+}
+
+function doExport() {
+  const canvas = document.getElementById('canvas');
+  html2canvas(canvas, {
+    backgroundColor: '#0a0a0a',
+    scale: 2,
+  }).then(c => {
+    const link = document.createElement('a');
+    link.download = 'tech-stack.png';
+    link.href = c.toDataURL();
+    link.click();
+  });
+}
+
+// Initial render
+render();
+</script>
+
+</body>
+</html>
