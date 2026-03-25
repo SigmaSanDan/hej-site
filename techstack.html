@@ -287,6 +287,7 @@
     width: 100%;
     height: 100%;
     pointer-events: none;
+    z-index: 10;
   }
 
   .canvas-area svg line {
@@ -310,6 +311,7 @@
     cursor: grab;
     user-select: none;
     transition: transform 0.1s;
+    z-index: 20;
   }
 
   .node:active { cursor: grabbing; }
@@ -1030,15 +1032,15 @@ function renderConnections() {
     const ux = dx / len;
     const uy = dy / len;
 
-    const nodeRadius = 42;
+    // Calculate distance from center to edge of icon-box (half of 68px + border + margin)
+    const nodeRadius = 48;
     const fromCat = CATEGORIES[from.category];
     const toCat = CATEGORIES[to.category];
     const isTwoway = conn.direction === 'twoway';
 
     if (isTwoway) {
-      // Two parallel lines with offset, each with its own arrow
-      const gap = 6;
-      // Perpendicular offset
+      // Two parallel curved lines with offset, each with its own arrow
+      const gap = 8;
       const px = -uy * gap;
       const py = ux * gap;
 
@@ -1047,14 +1049,14 @@ function renderConnections() {
       const a1y = cy1 + uy * nodeRadius + py;
       const a2x = cx2 - ux * nodeRadius + px;
       const a2y = cy2 - uy * nodeRadius + py;
-      drawArrow(svg, a1x, a1y, a2x, a2y, fromCat.color, 0.75);
+      drawArrow(svg, a1x, a1y, a2x, a2y, fromCat.color, 0.8);
 
       // Line B: to → from (offset other side)
       const b1x = cx2 - ux * nodeRadius - px;
       const b1y = cy2 - uy * nodeRadius - py;
       const b2x = cx1 + ux * nodeRadius - px;
       const b2y = cy1 + uy * nodeRadius - py;
-      drawArrow(svg, b1x, b1y, b2x, b2y, toCat.color, 0.75);
+      drawArrow(svg, b1x, b1y, b2x, b2y, toCat.color, 0.8);
 
     } else {
       // Single arrow: from → to
