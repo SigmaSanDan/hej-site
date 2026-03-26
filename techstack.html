@@ -75,6 +75,46 @@
     margin-top: 2px;
   }
 
+  /* Quick picks */
+  .quick-picks {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+
+  .quick-pick {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    background: var(--navy-surface);
+    border: 1px solid var(--navy-border);
+    border-radius: 100px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--cream);
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.2s;
+  }
+
+  .quick-pick:hover {
+    background: rgba(255,255,255,0.08);
+    border-color: rgba(235, 92, 140, 0.3);
+    transform: translateY(-1px);
+  }
+
+  .quick-pick.added {
+    opacity: 0.3;
+    pointer-events: none;
+  }
+
+  .quick-pick img {
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+  }
+
   .powered-by {
     position: absolute;
     bottom: 20px;
@@ -494,6 +534,13 @@
     </div>
 
     <div class="form-group">
+      <label>Snabbval</label>
+      <div class="quick-picks" id="quickPicks"></div>
+    </div>
+
+    <div class="divider"></div>
+
+    <div class="form-group">
       <label>Systemnamn</label>
       <input type="text" id="systemName" placeholder="t.ex. Salesforce, PostgreSQL..." autofocus>
     </div>
@@ -513,6 +560,9 @@
         <option value="ai">AI & ML</option>
         <option value="webshop">Webshop & E-handel</option>
         <option value="finance">Ekonomisystem</option>
+        <option value="ta">TA & Transport</option>
+        <option value="wms">WMS & Lager</option>
+        <option value="erp">Affärssystem</option>
         <option value="other">Övrigt</option>
       </select>
     </div>
@@ -582,12 +632,19 @@ const CATEGORIES = {
   ai:            { label: 'AI & ML',             color: '#a78bfa', icon: '🤖' },
   webshop:       { label: 'Webshop & E-handel', color: '#22d3ee', icon: '🛒' },
   finance:       { label: 'Ekonomisystem',      color: '#4ade80', icon: '💰' },
-  other:         { label: 'Övrigt',              color: '#737373', icon: '📦' },
+  ta:            { label: 'TA & Transport',     color: '#fb923c', icon: '🚚' },
+  wms:           { label: 'WMS & Lager',        color: '#a3e635', icon: '📦' },
+  erp:           { label: 'Affärssystem',       color: '#c084fc', icon: '🏢' },
+  other:         { label: 'Övrigt',              color: '#737373', icon: '⚙' },
 };
 
 // Known system → domain mappings for auto-logo
 const KNOWN_DOMAINS = {
   'fortnox': 'fortnox.se',
+  'attire': 'attire.se',
+  'nshift': 'nshift.com',
+  'ongoing': 'ongoingwarehouse.com',
+  'ongoing wms': 'ongoingwarehouse.com',
   'visma': 'visma.com',
   'google': 'google.com',
   'github': 'github.com',
@@ -810,6 +867,61 @@ document.getElementById('systemDomain').addEventListener('input', () => {
   document.getElementById('systemDomain').dataset.autoFilled = '';
 });
 
+// Quick pick presets
+const QUICK_PICKS = [
+  { name: 'Attire',      domain: 'attire.se',               category: 'erp' },
+  { name: 'Fortnox',     domain: 'fortnox.se',              category: 'finance' },
+  { name: 'Shopify',     domain: 'shopify.se',              category: 'webshop' },
+  { name: 'WooCommerce', domain: 'woocommerce.com',         category: 'webshop' },
+  { name: 'NShift',      domain: 'nshift.com',              category: 'ta' },
+  { name: 'Ongoing',     domain: 'ongoingwarehouse.com',    category: 'wms' },
+];
+
+function renderQuickPicks() {
+  const container = document.getElementById('quickPicks');
+  const addedNames = systems.map(s => s.name.toLowerCase());
+
+  container.innerHTML = QUICK_PICKS.map(qp => {
+    const isAdded = addedNames.includes(qp.name.toLowerCase());
+    return `
+      <button class="quick-pick ${isAdded ? 'added' : ''}"
+              onclick="addQuickPick('${qp.name}', '${qp.domain}', '${qp.category}')">
+        <img src="https://www.google.com/s2/favicons?domain=${qp.domain}&sz=128" alt="" onerror="this.style.display='none'">
+        ${qp.name}
+      </button>
+    `;
+  }).join('');
+}
+
+function addQuickPick(name, domain, category) {
+  // Check if already added
+  if (systems.some(s => s.name.toLowerCase() === name.toLowerCase())) return;
+
+  const canvas = document.getElementById('canvas');
+  const rect = canvas.getBoundingClientRect();
+  const cx = rect.width / 2;
+  const cy = rect.height / 2;
+
+  const angle = (systems.length * 137.5) * (Math.PI / 180);
+  const radius = 120 + systems.length * 30;
+  const x = cx + Math.cos(angle) * Math.min(radius, rect.width * 0.35) - 40;
+  const y = cy + Math.sin(angle) * Math.min(radius, rect.height * 0.35) - 40;
+
+  const logoUrl = getLogoUrl(domain);
+
+  systems.push({
+    id: generateId(),
+    name,
+    category,
+    domain,
+    logoUrl,
+    x: Math.max(20, Math.min(x, rect.width - 120)),
+    y: Math.max(20, Math.min(y, rect.height - 120)),
+  });
+
+  render();
+}
+
 function removeSystem(id) {
   systems = systems.filter(s => s.id !== id);
   connections = connections.filter(c => c.from !== id && c.to !== id);
@@ -911,6 +1023,7 @@ function autoLayout() {
 }
 
 function render() {
+  renderQuickPicks();
   renderSidebar();
   renderCanvas();
   renderConnections();
